@@ -21,13 +21,26 @@ defmodule Lingling.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Lingling, []},
-     applications: [:nerves, :logger, :nerves_leds, :fsm]]
+     applications: [:nerves,
+                    :logger,
+                    :nerves_leds,
+                    :httpoison,
+                    :nerves_interim_wifi,
+                    :fsm, :elixir_ale,
+                    :slack,
+                    :websocket_client
+                   ]]
   end
 
   def deps do
     [{:nerves, "~> 0.3.2"},
      {:nerves_leds, "~> 0.7.0"},
-     {:fsm, "~> 0.2.0"}
+     {:nerves_interim_wifi, "~> 0.0.2"},
+     {:fsm, "~> 0.2.0"},
+     {:elixir_ale, "~> 0.5.5"},
+     {:slack, "~> 0.7.0"},
+     {:websocket_client, git: "https://github.com/jeremyong/websocket_client"},
+     {:httpoison, "~> 0.8.0"}
     ]
   end
 

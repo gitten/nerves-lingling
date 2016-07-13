@@ -1,98 +1,81 @@
 defmodule Lingling.DoorMonitor do
-  use Fsm, initial_state: :init
-
+  use GenServer
+  
   alias Nerves.Leds
+  alias Lingling.DoorSwitch
+  alias Lingling.DoorFsm
 
-  @door_pin 7
-  def start(_,_) do
-  #   Gpio.start_link(@door_pin, :output, name: :door)
-  #   Gpio.set_int(:door, :both)
-  #   spawn fn -> fsm(new)
-  end
+  
+  def start_link do
+    {:ok, pid} = return =
+      GenServer.start_link(__MODULE__, [], name: :door_monitor)
 
-  def fsm(state) do
-    case state do
-      %{state: :init} ->
-        state
-        |> check_door(door_status)
-        |> fsm
+    :ok = GenServer.cast pid, :fsm_start
 
-      %{state: :opened} ->
-        state
-        |> wait_for(door_event)
-        |> door_closed
-        |> fsm
-
-      %{state: :closed} ->
-        state
-        |> wait_for(door_event)
-        |> door_opened
-        |> fsm
-    end
-  end
-
-
-  defp door_status do
-    case Gpio.read(:door) do
-      1 ->
-        :opened
-        
-      0 ->
-        :closed
-    end
-  end
-
-
-  defp door_event do
-    #   receive do
-    #   {:gpio_interupt, @door_pin, :rising} ->
-    #     :opened
-
-    #   {:gpio_interupt, @door_pin, :falling} ->
-    #     :closed
-
-    #   _ ->
-    #     IO.puts :stderr, "Unexpected message received"
-    #     door_event
-    # end
+    return
   end
 
   
-  defp broadcast(:opened) do
-    Leds.set green: :fastblink
-  end
-  defp broadcast(:closed) do
-    Leds.set green: false
-  end
+  def init(_opts) do
+    {:ok, _} = DoorSwitch.start_link
+    door_status = DoorSwitch.status |> show_status
     
+    state =
+      DoorFsm.new
+      |> DoorFsm.check_door(door_status)
 
-  defstate init do
-    defevent check_door(:opened) do
-      next_state(:opened)
-    end
-    defevent check_door(:closed) do
-      next_state(:closed)
-    end
+    {:ok, state}
   end
 
 
-  defstate opened do
-    defevent wait_for(:closed) do
-      broadcast :closed
+
+  def show_status(status = :opened) do
+    Leds.set red: :slowblink
+    status
+  end
+  def show_status(status = :closed) do
+    Leds.set red: false
+    status
+  end
+
+  
+  
+
+  # state machine and door monitor call backs
+
+  def handle_call(:door_status, caller, door) do
+    {:reply, door.state, door}
+  end
+  
+  
+  def handle_cast(:fsm_start, door) do
+       send self, :fsm
+       {:noreply, door}
+  end
+  
+
+  def handle_info(:fsm, door) do
+    new_state =
+      DoorSwitch.status
+      |> show_status
+    
+    new_door = cond do
+      new_state == door.state ->
+        door
+
+      true ->
+        send :slack_bot, {:door_status, new_state}
+        Map.put(door, :state, new_state)
     end
-    defevent door_closed do
-      next_state(:closed)
-    end
+
+    :timer.sleep 2000
+
+    send self, :fsm
+    {:noreply, new_door}
   end
 
 
-  defstate closed do
-    defevent wait_for(:opened) do
-      broadcast :opened
-    end
-    defevent door_opened do
-      next_state(:opened)
-    end
-  end
-
+  
+  def handle_info(_, state), do: {:noreply, state}
+  
 end
