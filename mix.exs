@@ -7,7 +7,7 @@ defmodule Lingling.Mixfile do
     [app: :lingling,
      version: "0.0.1",
      target: @target,
-     archives: [nerves_bootstrap: "0.1.3"],
+     archives: [nerves_bootstrap: "0.1.4"],
      deps_path: "deps/#{@target}",
      build_path: "_build/#{@target}",
      build_embedded: Mix.env == :prod,
@@ -26,18 +26,19 @@ defmodule Lingling.Mixfile do
                     :nerves_leds,
                     :httpoison,
                     :nerves_interim_wifi,
-                    :fsm, :elixir_ale,
+                    :fsm,
+                    :elixir_ale,
                     :slack,
                     :websocket_client
                    ]]
   end
 
   def deps do
-    [{:nerves, "~> 0.3.2"},
+    [{:nerves, "~> 0.3.4"},
      {:nerves_leds, "~> 0.7.0"},
      {:nerves_interim_wifi, "~> 0.0.2"},
      {:fsm, "~> 0.2.0"},
-     {:elixir_ale, "~> 0.5.5"},
+     {:elixir_ale, "~> 0.5.6"},
      {:slack, "~> 0.7.0"},
      {:websocket_client, git: "https://github.com/jeremyong/websocket_client"},
      {:httpoison, "~> 0.8.0"}

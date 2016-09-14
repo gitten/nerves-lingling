@@ -15,7 +15,7 @@ defmodule Lingling.DoorMonitor do
     return
   end
 
-  
+
   def init(_opts) do
     {:ok, _} = DoorSwitch.start_link
     door_status = DoorSwitch.status |> show_status

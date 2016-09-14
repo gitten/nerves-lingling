@@ -12,18 +12,10 @@ defmodule Lingling do
     :timer.sleep 3000
     Lingling.Wifi.set_sys_time
 
-    # :timer.sleep 3000
-    {:ok, bot} = Lingling.SlackBot.start_link(@slack_token)
-    Process.register(bot, :slack_bot)
-
-    Lingling.DoorMonitor.start_link
-
     # Define workers and child supervisors to be supervised
     children = [
-
-      # worker(Lingling.SlackBot, [@slack_token, name: :slack_bot])
-
-      # worker(Lingling.DoorMonitor, [])
+      worker(Lingling.DoorMonitor, []),
+      worker(Lingling.SlackBot, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
@@ -32,4 +24,13 @@ defmodule Lingling do
     Supervisor.start_link(children, opts)
   end
 
+  def start_sup_test do
+    import Supervisor.Spec
+    children = [
+
+    ]
+
+        opts = [strategy: :one_for_one, name: Lingling.Test]
+    Supervisor.start_link(children, opts)
+  end
 end

@@ -1,11 +1,21 @@
 defmodule Lingling.SlackBot do
-  defstruct event_time: nil
+  
   use Slack
 
-  @door_channel "#doorbell-test"
-
+  @door_channel "#doorbell"
   def rtm_test do
     start_link(Application.get_env(:slack, :api_token_test))
+  end
+
+
+  def start_link do
+    {:ok, pid} =
+      Application.get_env(:slack, :api_token)
+      |> start_link
+
+    Process.register(pid, :slack_bot)
+    
+    {:ok, pid}
   end
 
   def handle_connect(slack) do
@@ -29,6 +39,11 @@ defmodule Lingling.SlackBot do
   end
 
 
+  def handle_message(msg = %{subtype: "bot_message"}, slack) do
+    IO.inspect msg
+    :ok
+  end
+
   def handle_message(_,_), do: :ok
 
 
@@ -41,6 +56,7 @@ defmodule Lingling.SlackBot do
     {:ok, new_status}
   end
 
+
   def handle_info({:cmd, data, channel}, slack) do
     case data do
       ["echo", text] ->
@@ -52,6 +68,9 @@ defmodule Lingling.SlackBot do
 
   
   def handle_info(_, _), do: :ok
+
+  
+
 
 
   defp format_msg(text) do
